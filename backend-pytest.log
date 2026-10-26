@@ -1,9 +1,37 @@
-........................................................................ [ 54%]
-.............................................................            [100%]
+........................................................................ [ 50%]
+..........F...........................................................   [100%]
+=================================== FAILURES ===================================
+_________ test_asistente_requiere_premium_y_ejecuta_sobre_datos_reales _________
+
+client = <starlette.testclient.TestClient object at 0x7f9839ee02f0>
+fake_ml = <conftest.FakeConnector object at 0x7f98389b6ea0>
+
+    def test_asistente_requiere_premium_y_ejecuta_sobre_datos_reales(client, fake_ml):
+        h, _ = signup(client)
+        item = add(client, h)
+        r = client.post(f"{API}/ai/command", json={"text": "avísame cuando baje de 200.000", "tracked_id": item["id"]}, headers=h)
+        assert r.status_code == 402
+        with session() as db:
+            u = db.scalar(select(User))
+            u.tier = "premium"
+            db.commit()
+        r = client.post(f"{API}/ai/command", json={"text": "avísame cuando baje de 200.000", "tracked_id": item["id"]}, headers=h)
+        assert r.status_code == 200, r.text
+        assert r.json()["interpreted_as"]["action"]
+        got = client.get(f"{API}/tracked/{item['id']}", headers=h).json()
+        assert float(got["target_price"]) == 200000
+        r = client.post(f"{API}/ai/command", json={"text": "pausa este producto", "tracked_id": item["id"]}, headers=h)
+        assert r.status_code == 200
+>       assert client.get(f"{API}/tracked/{item['id']}", headers=h).json()["paused"] is True
+E       assert False is True
+
+tests/test_sync_account_ai_history.py:114: AssertionError
 =============================== warnings summary ===============================
 ../../../../../../opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/fastapi/testclient.py:1
   /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-133 passed, 1 warning in 13.47s
+=========================== short test summary info ============================
+FAILED tests/test_sync_account_ai_history.py::test_asistente_requiere_premium_y_ejecuta_sobre_datos_reales - assert False is True
+1 failed, 141 passed, 1 warning in 17.08s
