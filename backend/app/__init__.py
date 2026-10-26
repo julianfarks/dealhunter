@@ -1,0 +1,1 @@
+"""DealHunter AI backend."""
