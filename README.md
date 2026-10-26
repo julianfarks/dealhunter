@@ -8,6 +8,12 @@ tienda (menú *Compartir*) y el servidor vigila el precio por ti, aunque tu tel�
 > las APIs reales** (hacen falta tus credenciales); Amazon, AliExpress y Temu **no tienen fuente de datos** y sus
 > productos quedan guardados con el estado «Requiere una fuente de datos compatible». Nunca se inventan precios.
 
+## Qué está verificado (y qué no)
+
+- Backend: **143 pruebas pasan** en GitHub Actions (datos de tiendas simulados y etiquetados).
+- Android: **compila** y pasa sus pruebas unitarias en GitHub Actions; el APK está en `releases/`.
+- **No verificado:** uso real en un teléfono, conexión con las APIs reales de Mercado Libre/eBay, envío real de push (FCM).
+
 ## Qué incluye
 
 | Carpeta | Contenido |

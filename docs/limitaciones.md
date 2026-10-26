@@ -1,5 +1,9 @@
 # Limitaciones reales (léelas)
 
+- **La app Android nunca se ejecutó en un teléfono ni en un emulador.** Se verificó que compila y que sus pruebas
+  unitarias pasan (GitHub Actions), pero no se probó a mano el flujo de pantallas ni el menú *Compartir*. Pueden existir
+  errores de interfaz que solo se ven al usarla: repórtalos y se corrigen.
+
 - **Nada se ha probado contra tiendas reales.** Mercado Libre y eBay están implementados según su documentación
   oficial, pero no se ejecutaron con credenciales reales. Verifícalos con `python -m app.admin check <url>`.
 - **Amazon, AliExpress y Temu no tienen fuente de datos.** Sus enlaces se guardan, pero el precio no se vigila hasta
