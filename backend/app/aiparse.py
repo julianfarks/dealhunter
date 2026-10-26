@@ -124,6 +124,10 @@ def classify_intent(text: str) -> dict:
     amount = parse_amount(text)
     pct = parse_percent(text)
 
+    if re.search(r"\b(pausa|pausar|pausame|deten|detener|deja de vigilar|deja de seguir)", t):
+        return {"action": "pause"}
+    if re.search(r"\b(reanuda|reanudar|reactiva|reactivar|retoma|retomar|vuelve a vigilar)", t):
+        return {"action": "resume"}
     if re.search(r"minimo historico", t) and re.search(r"avis|alert|notific", t):
         return {"action": "set_historic_low"}
     if re.search(r"cerca (del|de mi|de su) (precio )?objetivo|cerca de (mi )?meta|casi (llegan|alcanzan)", t):

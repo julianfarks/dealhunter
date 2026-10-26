@@ -69,3 +69,11 @@ def test_intenciones_del_documento(texto, accion):
 
 def test_top_n_en_palabras():
     assert classify_intent("Muéstrame los cinco productos de mi carrito con mayor ahorro potencial")["n"] == 5
+
+
+def test_pausar_y_reanudar():
+    from app.aiparse import classify_intent
+
+    assert classify_intent("pausa este producto")["action"] == "pause"
+    assert classify_intent("Reanuda el seguimiento")["action"] == "resume"
+    assert classify_intent("avísame cuando baje de 200.000")["action"] == "set_target"

@@ -20,12 +20,12 @@ from ..util import D, fmt_money, pct_change
 from . import compare as compare_svc
 from . import history as history_svc
 from .fx import load_rates
-from .tracking import set_target, upsert_alert
+from .tracking import apply_pause, set_target, upsert_alert
 from .views import latest_prices, potential_saving
 
 log = logging.getLogger("dealhunter.ai")
 
-ACTIONS = ["set_target", "set_pct", "set_any_drop", "set_historic_low", "find_promotions", "compare",
+ACTIONS = ["pause", "resume", "set_target", "set_pct", "set_any_drop", "set_historic_low", "find_promotions", "compare",
            "near_target", "top_savings", "review_first", "explain", "unknown"]
 
 _SYSTEM = (
@@ -100,6 +100,17 @@ def execute(db: Session, user: User, intent: dict, tracked: TrackedProduct | Non
         if tracked is None:
             return {"ok": False, "message": "Abre un producto de tu carrito y vuelve a pedírmelo para saber a cuál te refieres."}
         return None
+
+    if action in ("pause", "resume"):
+        if (err := need_product()) is not None:
+            return err
+        apply_pause(db, tracked, action == "pause")
+        db.commit()
+        name = tracked.listing.title or "este producto"
+        return {"ok": True, "action": action, "message":
+                f"Listo: «{name}» " + ("quedó en pausa; no se vigilará hasta que lo reanudes." if action == "pause"
+                                       else "se vigila de nuevo."),
+                "changes": {"tracked_id": tracked.id, "paused": action == "pause"}}
 
     if action in ("set_target", "set_pct", "set_any_drop", "set_historic_low"):
         if (err := need_product()) is not None:
