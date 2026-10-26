@@ -8,8 +8,7 @@
 - **Push:** requiere tu proyecto de Firebase (`google-services.json` en la app y cuenta de servicio en el servidor). Sin
   eso, las alertas se guardan y se ven dentro de la app, y el estado de entrega lo indica.
 - **El APK es de depuración**, no está firmado para Google Play.
-- **Cupones:** sólo se muestran los que la tienda/usuario registró; se marcan «verificados» únicamente con fecha de
-  verificación. No se buscan cupones en la web.
+- **Cupones:** el modelo, la verificación (sólo «verificado» si tiene fecha de verificación) y las alertas existen, pero **ninguna fuente real alimenta cupones todavía**: la lista de cupones estará vacía. No se buscan cupones en la web ni se inventan.
 - **Comparación entre tiendas:** los totales son estimaciones; las coincidencias sin GTIN o marca+modelo son aproximadas.
 - **Conversión de moneda:** usa una tasa pública (open.er-api.com) y siempre muestra tasa y fecha; si no hay tasa, se
   muestra el importe original.
