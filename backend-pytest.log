@@ -1,0 +1,65 @@
+...............F.F...................................................... [ 64%]
+........................................                                 [100%]
+=================================== FAILURES ===================================
+__________________________ test_acciones_del_carrito ___________________________
+
+client = <starlette.testclient.TestClient object at 0x7effac498650>
+fake_ml = <conftest.FakeConnector object at 0x7effac49b3b0>
+
+    def test_acciones_del_carrito(client, fake_ml):
+        h, _ = signup(client)
+        a = add(client, h, ML1).json()["item"]["id"]
+        b = add(client, h, ML2).json()["item"]["id"]
+        r = client.patch(f"{API}/tracked/{a}", json={"notes": "Para mamá", "list_name": "Regalos", "priority": 2}, headers=h)
+        assert r.json()["notes"] == "Para mamá" and r.json()["list_name"] == "Regalos" and r.json()["priority"] == 2
+        assert client.get(f"{API}/tracked/lists", headers=h).json()["lists"] == ["Regalos"]
+        # archivar / restaurar
+        client.post(f"{API}/tracked/bulk", json={"ids": [a, b], "action": "archive"}, headers=h)
+        assert client.get(f"{API}/tracked", headers=h).json()["count"] == 0
+        assert client.get(f"{API}/tracked?archived=true", headers=h).json()["count"] == 2
+        client.post(f"{API}/tracked/bulk", json={"ids": [a], "action": "restore"}, headers=h)
+        assert [i["id"] for i in client.get(f"{API}/tracked", headers=h).json()["items"]] == [a]
+        # comprado
+        r = client.patch(f"{API}/tracked/{a}", json={"purchased": True, "purchased_price": "250000"}, headers=h)
+>       assert r.json()["purchased"] is True and r.json()["purchased_price"] == "250000.00"
+E       AssertionError: assert (True is True and '250000' == '250000.00'
+E         
+E         - 250000.00
+E         ?       ---
+E         + 250000)
+
+tests/test_cart.py:103: AssertionError
+_______________ test_precio_objetivo_crea_y_desactiva_su_alerta ________________
+
+client = <starlette.testclient.TestClient object at 0x7effac483800>
+fake_ml = <conftest.FakeConnector object at 0x7effac41aea0>
+
+    def test_precio_objetivo_crea_y_desactiva_su_alerta(client, fake_ml):
+        h, _ = signup(client)
+        item = add(client, h, ML1, target_price="220000").json()["item"]
+>       assert item["target_price"] == "220000.00" and item["target_currency"] == "COP"
+E       AssertionError: assert ('220000' == '220000.00'
+E         
+E         - 220000.00
+E         ?       ---
+E         + 220000)
+
+tests/test_cart.py:130: AssertionError
+=============================== warnings summary ===============================
+../../../../../../opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_cart.py::test_acciones_del_carrito - AssertionError: assert (True is True and '250000' == '250000.00'
+  
+  - 250000.00
+  ?       ---
+  + 250000)
+FAILED tests/test_cart.py::test_precio_objetivo_crea_y_desactiva_su_alerta - AssertionError: assert ('220000' == '220000.00'
+  
+  - 220000.00
+  ?       ---
+  + 220000)
+2 failed, 110 passed, 1 warning in 10.62s
