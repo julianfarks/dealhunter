@@ -7,6 +7,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: backend
@@ -19,8 +21,14 @@ jobs:
           cache-dependency-path: backend/requirements-dev.txt
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q -p no:cacheprovider 2>&1 | tee pytest.log; exit ${PIPESTATUS[0]}
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-log
-          path: backend/pytest.log
+      - name: Publicar log en la rama ci-logs
+        if: always()
+        working-directory: .
+        run: |
+          mkdir /tmp/logs && cp backend/pytest.log /tmp/logs/backend-pytest.log
+          git config user.name "ci"; git config user.email "ci@users.noreply.github.com"
+          git fetch origin ci-logs || true
+          if git rev-parse origin/ci-logs >/dev/null 2>&1; then git checkout -B ci-logs origin/ci-logs; else git checkout --orphan ci-logs; git rm -rf . >/dev/null; fi
+          cp /tmp/logs/backend-pytest.log .
+          git add backend-pytest.log && git commit -m "log backend $GITHUB_SHA" || true
+          git push origin ci-logs
