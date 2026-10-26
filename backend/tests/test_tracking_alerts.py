@@ -218,7 +218,7 @@ def test_precio_inicial_y_ahorro_potencial(client, fake_ml):
     check(now=t0 + timedelta(hours=1))
     s = state(client, h, item["id"])
     assert float(s["price_initial"]) == 300000 and float(s["price_current"]) == 250000
-    assert float(s["potential_saving"]) == 50000
+    assert round(float(s["change_from_initial_pct"]), 2) == round((250000 - 300000) / 300000 * 100, 2)
 
 
 def test_paginacion_y_lectura_de_notificaciones(client, fake_ml):
