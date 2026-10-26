@@ -1,0 +1,10 @@
+name: ping
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ci ok"; java -version; ls $ANDROID_HOME 2>/dev/null | head
