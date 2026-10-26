@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: dealhunter
+      POSTGRES_PASSWORD: dealhunter
+      POSTGRES_DB: dealhunter
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dealhunter"]
+      interval: 5s
+      retries: 10
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://dealhunter:dealhunter@db:5432/dealhunter
+    depends_on:
+      db: {condition: service_healthy}
+    ports: ["8000:8000"]
+  worker:
+    build: ./backend
+    command: ["python", "-m", "app.worker"]
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://dealhunter:dealhunter@db:5432/dealhunter
+    depends_on:
+      db: {condition: service_healthy}
+      api: {condition: service_started}
+volumes:
+  dbdata:

@@ -14,7 +14,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
+      - name: Aceptar licencias del SDK (el runner ya trae el SDK de Android)
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - uses: gradle/actions/setup-gradle@v4
       - name: Compilar APK debug
         working-directory: android
@@ -22,15 +23,15 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug 2>&1 | tee /tmp/android-build.log
           exit ${PIPESTATUS[0]}
-      - name: Publicar log en ci-logs
+      - name: Publicar log en ci-logs-android
         if: always()
         run: |
           mkdir -p /tmp/logs && tail -n 400 /tmp/android-build.log > /tmp/logs/android-build.log || true
           git config user.name ci; git config user.email ci@users.noreply.github.com
-          git fetch origin ci-logs || true
-          if git rev-parse origin/ci-logs >/dev/null 2>&1; then git checkout -B ci-logs origin/ci-logs; else git checkout --orphan ci-logs; git rm -rf . >/dev/null; fi
+          git fetch origin ci-logs-android || true
+          if git rev-parse origin/ci-logs-android >/dev/null 2>&1; then git checkout -B ci-logs-android origin/ci-logs-android; else git checkout --orphan ci-logs-android; git rm -rf . >/dev/null; fi
           cp /tmp/logs/android-build.log . && git add android-build.log && git commit -m "log android $GITHUB_SHA" || true
-          git push origin ci-logs
+          git push origin ci-logs-android
       - uses: actions/upload-artifact@v4
         with:
           name: DealHunterAI-debug-apk
