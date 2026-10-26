@@ -36,6 +36,10 @@ class Prefs(context: Context) {
         get() = sp.getString("push_token", null)
         set(v) = sp.edit().putString("push_token", v).apply()
 
+    var skippedAuth: Boolean
+        get() = sp.getBoolean("skipped_auth", false)
+        set(v) = sp.edit().putBoolean("skipped_auth", v).apply()
+
     val loggedIn: Boolean get() = !refreshToken.isNullOrBlank()
 
     fun clearSession() {
