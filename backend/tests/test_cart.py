@@ -100,7 +100,7 @@ def test_acciones_del_carrito(client, fake_ml):
     assert [i["id"] for i in client.get(f"{API}/tracked", headers=h).json()["items"]] == [a]
     # comprado
     r = client.patch(f"{API}/tracked/{a}", json={"purchased": True, "purchased_price": "250000"}, headers=h)
-    assert r.json()["purchased"] is True and r.json()["purchased_price"] == "250000.00"
+    assert r.json()["purchased"] is True and float(r.json()["purchased_price"]) == 250000
     assert client.get(f"{API}/tracked?purchased=true", headers=h).json()["count"] == 1
     assert client.get(f"{API}/tracked", headers=h).json()["count"] == 0
     # eliminar
@@ -127,7 +127,7 @@ def test_filtros_y_orden(client, fake_ml, fake_ebay):
 def test_precio_objetivo_crea_y_desactiva_su_alerta(client, fake_ml):
     h, _ = signup(client)
     item = add(client, h, ML1, target_price="220000").json()["item"]
-    assert item["target_price"] == "220000.00" and item["target_currency"] == "COP"
+    assert float(item["target_price"]) == 220000 and item["target_currency"] == "COP"
     assert [a["kind"] for a in item["alerts"]] == ["target_price"]
     r = client.patch(f"{API}/tracked/{item['id']}", json={"target_price": None}, headers=h).json()
     assert r["target_price"] is None and r["alerts"][0]["active"] is False
