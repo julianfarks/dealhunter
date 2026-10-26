@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DealHunter AI</string>
+    <string name="share_label">Añadir a DealHunter</string>
+    <string name="channel_alerts">Alertas de precio</string>
+    <string name="channel_alerts_desc">Avisos cuando un producto baja de precio o cumple tu objetivo</string>
+</resources>

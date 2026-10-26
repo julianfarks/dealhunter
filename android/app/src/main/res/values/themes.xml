@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.DealHunter" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/dh_bg</item>
+        <item name="android:statusBarColor">@color/dh_bg</item>
+        <item name="android:navigationBarColor">@color/dh_bg</item>
+    </style>
+    <style name="Theme.DealHunter.Share" parent="android:Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowNoDisplay">false</item>
+    </style>
+</resources>

@@ -18,6 +18,11 @@ def add(client, h, url=ML1, **kw):
     return r.json()["item"]
 
 
+def feed(fake, *items):
+    """Sustituye la cola del conector simulado (el último elemento se repite)."""
+    fake.queue[:] = list(items)
+
+
 def check(listing_id=None, now=None):
     with session() as db:
         lid = listing_id or db.scalar(select(StoreListing.id))
@@ -104,7 +109,7 @@ def test_sin_cambios_no_se_guardan_observaciones_repetidas(client, fake_ml):
         check(now=t0 + timedelta(hours=i))
     with session() as db:
         assert db.scalar(select(func.count(PriceObservation.id))) == 1
-    fake_ml.push(info(95000))
+    feed(fake_ml, info(95000))
     check(now=t0 + timedelta(hours=5))
     with session() as db:
         assert db.scalar(select(func.count(PriceObservation.id))) == 2
@@ -116,24 +121,24 @@ def test_estados_honestos_ante_cada_resultado(client, fake_ml):
     tid = item["id"]
     t0 = utcnow()
 
-    fake_ml.push(ConnectorError("Límite de peticiones"))
+    feed(fake_ml, ConnectorError("Límite de peticiones"))
     assert check(now=t0) == "failed"
     s = state(client, h, tid)
     assert s["state"] == "temporarily_failed" and s["price_current"] is None
 
-    fake_ml.push(info(None))
+    feed(fake_ml, info(None))
     check(now=t0 + timedelta(hours=1))
     assert state(client, h, tid)["state"] == "price_unavailable"
 
-    fake_ml.push(ProductGone("La publicación ya no existe"))
+    feed(fake_ml, ProductGone("La publicación ya no existe"))
     assert check(now=t0 + timedelta(hours=2)) == "gone"
     assert state(client, h, tid)["state"] == "unavailable_in_store"
 
-    fake_ml.push(SourceUnavailable("Sin permiso de la tienda"))
+    feed(fake_ml, SourceUnavailable("Sin permiso de la tienda"))
     assert check(now=t0 + timedelta(hours=3)) == "needs_source"
     assert state(client, h, tid)["state"] == "needs_source"
 
-    fake_ml.push(info(120000))
+    feed(fake_ml, info(120000))
     check(now=t0 + timedelta(hours=4))
     s = state(client, h, tid)
     assert s["state"] == "active" and float(s["price_current"]) == 120000
@@ -212,7 +217,7 @@ def test_precio_inicial_y_ahorro_potencial(client, fake_ml):
     check(now=t0)
     check(now=t0 + timedelta(hours=1))
     s = state(client, h, item["id"])
-    assert float(s["initial_price"]) == 300000 and float(s["price_current"]) == 250000
+    assert float(s["price_initial"]) == 300000 and float(s["price_current"]) == 250000
     assert float(s["potential_saving"]) == 50000
 
 
@@ -278,7 +283,7 @@ def test_token_invalido_se_elimina_y_fallo_temporal_se_reintenta(client, fake_ml
     assert notifs(client, h)[0]["delivery_status"] == "sent"
 
     sender.script = [SendResult.INVALID_TOKEN]
-    fake_ml.push(info(210000))
+    feed(fake_ml, info(210000))
     check(now=t0 + timedelta(hours=3))
     from app.models import DeviceToken
     with session() as db:

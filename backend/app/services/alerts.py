@@ -94,6 +94,7 @@ def evaluate_alerts(db: Session, user: User, tracked: TrackedProduct, ctx: Check
     prev_price = ctx.prev.price if (ctx.prev is not None and ctx.prev.currency == currency) else None
     prev_price = D(prev_price) if prev_price is not None else None
     created: list[Notification] = []
+    ev = ctx.obs.observed_at.isoformat() if ctx.obs is not None else "-"
 
     def notify(kind: str, title: str, body: str, dedupe: str, prev=None) -> None:
         n = create_notification(
@@ -119,7 +120,7 @@ def evaluate_alerts(db: Session, user: User, tracked: TrackedProduct, ctx: Check
                     notify(k, "¡Oferta detectada!",
                            f"{name} bajó de {fmt_money(prev_price, currency)} a {fmt_money(cur, currency)}."
                            f" Diferencia: {fmt_money(prev_price - cur, currency)}." + _saving_suffix(tracked, cur, currency),
-                           f"{alert.id}:{cur}", prev_price)
+                           f"{alert.id}:{cur}:{ev}", prev_price)
             elif k == AlertKind.PCT_DROP.value:
                 ini = tracked.initial_price
                 pct = alert.threshold
@@ -132,7 +133,7 @@ def evaluate_alerts(db: Session, user: User, tracked: TrackedProduct, ctx: Check
                     notify(k, "¡Bajó el porcentaje que querías!",
                            f"{name} está {quantize(drop, 1)}% por debajo del precio registrado "
                            f"({fmt_money(D(ini), currency)}): ahora {fmt_money(cur, currency)}.",
-                           f"{alert.id}:{cur}", D(ini))
+                           f"{alert.id}:{cur}:{ev}", D(ini))
             elif k == AlertKind.TARGET_PRICE.value:
                 thr = alert.threshold if alert.threshold is not None else tracked.target_price
                 thr_cur = alert.threshold_currency if alert.threshold is not None else tracked.target_currency
@@ -147,7 +148,7 @@ def evaluate_alerts(db: Session, user: User, tracked: TrackedProduct, ctx: Check
                     else:
                         body = f"{name} está en {fmt_money(cur, currency)}, en o por debajo de tu objetivo ({objetivo})."
                     notify(k, "¡Alcanzó tu precio objetivo!", body + _saving_suffix(tracked, cur, currency),
-                           f"{alert.id}:{cur}", prev_price)
+                           f"{alert.id}:{cur}:{ev}", prev_price)
             elif k == AlertKind.HISTORIC_LOW.value:
                 q = select(func.min(PriceObservation.price), func.count(PriceObservation.id)).where(
                     PriceObservation.listing_id == listing.id, PriceObservation.price.is_not(None),
@@ -161,7 +162,7 @@ def evaluate_alerts(db: Session, user: User, tracked: TrackedProduct, ctx: Check
                     notify(k, "¡Mínimo histórico registrado!",
                            f"{name} está en {fmt_money(cur, currency)}, el precio más bajo que hemos registrado "
                            f"(anterior mínimo: {fmt_money(D(lowest), currency)}; historial de {count + 1} observaciones).",
-                           f"{alert.id}:{cur}", D(lowest))
+                           f"{alert.id}:{cur}:{ev}", D(lowest))
             elif k == AlertKind.TOTAL_BUDGET.value:
                 shipping = info.shipping_cost
                 total = cur + (D(shipping) if shipping is not None else Decimal(0))
@@ -174,7 +175,7 @@ def evaluate_alerts(db: Session, user: User, tracked: TrackedProduct, ctx: Check
                     notify(k, "Dentro de tu presupuesto",
                            f"{name}: total estimado {fmt_money(total, currency)}{ship_txt}. "
                            "Es una estimación: el total definitivo lo confirma la tienda al pagar.",
-                           f"{alert.id}:{cur}", None)
+                           f"{alert.id}:{cur}:{ev}", None)
 
         elif k == AlertKind.PROMOTION.value:
             for p in ctx.new_promos:
